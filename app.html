@@ -1,0 +1,90 @@
+@if (!isLoggedIn()) {
+  <main class="login-page">
+    <section class="login-card">
+      <div class="brand brand-large"><span class="brand-mark">A</span><span>Acme<span class="brand-dot">.</span></span></div>
+      <div class="login-heading">
+        <p class="eyebrow">WELCOME BACK</p>
+        <h1>Sign in to your workspace</h1>
+        <p class="muted">Manage your people and keep your team moving forward.</p>
+      </div>
+      <form (ngSubmit)="login()">
+        <label>Email address<input type="email" [ngModel]="loginEmail()" (ngModelChange)="loginEmail.set($event)" name="email" placeholder="you@company.com"></label>
+        <label>Password<input type="password" [ngModel]="loginPassword()" (ngModelChange)="loginPassword.set($event)" name="password" placeholder="Enter your password"></label>
+        @if (loginError()) { <p class="form-error">{{ loginError() }}</p> }
+        <button class="button button-primary button-full" type="submit">Sign in <span>→</span></button>
+      </form>
+      <p class="login-hint">Use the username and password configured in the backend.</p>
+    </section>
+  </main>
+} @else {
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-mark">A</span><span>Acme<span class="brand-dot">.</span></span></div>
+      <div class="workspace-switcher"><div class="workspace-icon">A</div><div><strong>Acme Inc.</strong><small>Workspace</small></div><span class="chevron">⌄</span></div>
+      <nav class="main-nav">
+        <p class="nav-label">MENU</p>
+        <button [class.active]="view() === 'overview'" (click)="setView('overview')"><span class="nav-icon">⌂</span> Overview</button>
+        <button [class.active]="view() === 'employees'" (click)="setView('employees')"><span class="nav-icon">♙</span> Employees <span class="nav-count">{{ employees().length }}</span></button>
+        <button [class.active]="view() === 'payments'" (click)="setView('payments')"><span class="nav-icon">₹</span> Payments</button>
+        <button [class.active]="view() === 'reports'" (click)="setView('reports')"><span class="nav-icon">◫</span> Reports</button>
+        <p class="nav-label nav-label-spaced">MANAGE</p>
+        <button [class.active]="view() === 'settings'" (click)="setView('settings')"><span class="nav-icon">⚙</span> Settings</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="help-card"><div class="help-icon">?</div><strong>Need a hand?</strong><p>Check our help center</p><button>Visit help center <span>→</span></button></div>
+        <div class="profile-mini"><div class="avatar avatar-blue">JD</div><div><strong>Jamie Doe</strong><small>Admin</small></div><button aria-label="Open profile menu" (click)="showProfileMenu.update(value => !value)">•••</button></div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <button class="mobile-menu" aria-label="Menu">☰</button>
+        <div class="breadcrumbs"><span>Workspace</span><b>/</b><strong>{{ view() === 'overview' ? 'Overview' : view() | titlecase }}</strong></div>
+        <div class="topbar-actions">
+          <button class="icon-button notification" aria-label="Notifications">♧<i></i></button>
+          <div class="top-profile"><div class="avatar avatar-blue">JD</div><div><strong>Jamie Doe</strong><small>{{ role() || 'User' }}</small></div><button aria-label="Open profile menu" (click)="showProfileMenu.update(value => !value)">⌄</button></div>
+          @if (showProfileMenu()) { <div class="profile-menu"><button (click)="logout()">Sign out</button></div> }
+        </div>
+      </header>
+
+      @if (view() === 'overview') {
+        <section class="page-content">
+          <div class="page-heading"><div><p class="eyebrow">TUESDAY, SEPTEMBER 24, 2024</p><h1>Good morning, Jamie <span class="wave">✦</span></h1><p class="muted">Here’s what’s happening with your team today.</p></div>          @if (canManageEmployees()) { <button class="button button-primary" (click)="openAddModal()">＋ Add employee</button> }</div>
+          <div class="stat-grid">
+            <article class="stat-card"><div class="stat-top"><span>Total employees</span><span class="stat-icon icon-blue">♙</span></div><strong>{{ employees().length }}</strong><p class="trend positive">↗ <b>8.2%</b> <span>vs last month</span></p></article>
+            <article class="stat-card"><div class="stat-top"><span>Active employees</span><span class="stat-icon icon-green">✓</span></div><strong>{{ activeCount() }}</strong><p class="trend positive">↗ <b>4.5%</b> <span>vs last month</span></p></article>
+            <article class="stat-card"><div class="stat-top"><span>Departments</span><span class="stat-icon icon-purple">▦</span></div><strong>{{ departmentStats().length }}</strong><p class="trend neutral">→ <b>2 new</b> <span>this quarter</span></p></article>
+            <article class="stat-card"><div class="stat-top"><span>On leave</span><span class="stat-icon icon-orange">◷</span></div><strong>{{ employees().length - activeCount() }}</strong><p class="trend neutral">→ <b>Same</b> <span>as last month</span></p></article>
+          </div>
+          <div class="dashboard-grid">
+            <section class="panel department-panel"><div class="panel-heading"><div><h2>Employees by department</h2><p class="muted">Team distribution across departments</p></div><button class="more-button">•••</button></div><div class="department-list">@for (item of departmentStats(); track item.name) {<div class="department-row"><div class="department-label"><span class="dept-dot"></span><span>{{ item.name }}</span></div><strong>{{ item.count }}</strong><div class="progress-track"><span [style.width.%]="item.count / employees().length * 100"></span></div><small>{{ (item.count / employees().length * 100).toFixed(0) }}%</small></div>}</div><button class="text-button" (click)="setView('employees')">View all departments <span>→</span></button></section>
+            <section class="panel activity-panel"><div class="panel-heading"><div><h2>Recent activity</h2><p class="muted">Latest updates from your team</p></div><button class="more-button">•••</button></div><div class="activity-list"><div class="activity-item"><div class="activity-icon activity-blue">＋</div><div><p><b>Olivia Martin</b> was added to the team</p><small>2 hours ago</small></div></div><div class="activity-item"><div class="activity-icon activity-purple">↻</div><div><p><b>Jackson Lee</b> updated their profile</p><small>Yesterday at 4:32 PM</small></div></div><div class="activity-item"><div class="activity-icon activity-orange">◷</div><div><p><b>Liam Harris</b> is on leave today</p><small>Yesterday at 9:10 AM</small></div></div><div class="activity-item"><div class="activity-icon activity-green">✓</div><div><p><b>Sophia Turner</b> completed onboarding</p><small>Sep 20, 2024</small></div></div></div><button class="text-button">View all activity <span>→</span></button></section>
+          </div>
+          <section class="panel table-panel"><div class="panel-heading"><div><h2>Recently added employees</h2><p class="muted">The newest members of your team</p></div><button class="text-button" (click)="setView('employees')">View all employees <span>→</span></button></div><div class="table-wrap"><table><thead><tr><th>EMPLOYEE</th><th>DEPARTMENT</th><th>ROLE</th><th>JOINED</th><th>STATUS</th><th></th></tr></thead><tbody>@for (employee of employees().slice(0, 5); track employee.id) {<tr><td><div class="person"><div class="avatar avatar-{{ employee.color }}">{{ employee.initials }}</div><div><strong>{{ employee.name }}</strong><small>{{ employee.id }}</small></div></div></td><td>{{ employee.department }}</td><td>{{ employee.role }}</td><td>{{ employee.joiningDate | date:'MMM d, y' }}</td><td><span class="status" [class.status-leave]="employee.status !== 'Active'"><i></i>{{ employee.status }}</span></td><td><button class="row-menu">•••</button></td></tr>}</tbody></table></div></section>
+        </section>
+      } @else if (view() === 'employees') {
+        <section class="page-content">
+          <div class="page-heading"><div><p class="eyebrow">PEOPLE DIRECTORY</p><h1>Employees</h1><p class="muted">Manage everyone in your organization.</p></div>@if (canManageEmployees()) { <button class="button button-primary" (click)="openAddModal()">＋ Add employee</button> }</div>
+          @if (apiError()) { <p class="api-error">{{ apiError() }}</p> }
+          <section class="panel employee-directory"><div class="directory-toolbar"><div class="search-box"><span>⌕</span><input #searchInput [value]="search()" (input)="updateSearch(searchInput.value)" placeholder="Search employees, roles, departments..."></div><select [value]="department()" (change)="updateDepartment(departmentInput.value)" #departmentInput>@for (item of departments(); track item) {<option [value]="item">{{ item }}</option>}</select><button class="filter-button">≡ Filters</button></div><div class="table-wrap"><table><thead><tr><th><button (click)="sortBy('name')">EMPLOYEE <span>↕</span></button></th><th><button (click)="sortBy('department')">DEPARTMENT <span>↕</span></button></th><th><button (click)="sortBy('role')">ROLE <span>↕</span></button></th><th><button (click)="sortBy('joiningDate')">JOINED <span>↕</span></button></th><th>STATUS</th><th></th></tr></thead><tbody>@for (employee of pagedEmployees(); track employee.id) {<tr><td><div class="person"><div class="avatar avatar-{{ employee.color }}">{{ employee.initials }}</div><div><strong>{{ employee.name }}</strong><small>{{ employee.email }}</small></div></div></td><td>{{ employee.department }}</td><td>{{ employee.role }}</td><td>{{ employee.joiningDate | date:'MMM d, y' }}</td><td><span class="status" [class.status-leave]="employee.status !== 'Active'"><i></i>{{ employee.status }}</span></td><td><div class="actions">@if (canManageEmployees()) { <button aria-label="Edit employee" (click)="openEditModal(employee)">✎</button> } @if (canDeleteEmployees()) { <button aria-label="Delete employee" (click)="requestDelete(employee)">⌫</button> }</div></td></tr>} @empty {<tr><td colspan="6" class="empty-state">No employees match your search.</td></tr>}</tbody></table></div><div class="pagination"><span>Showing <b>{{ pagedEmployees().length }}</b> of <b>{{ filteredEmployees().length }}</b> employees</span><div class="page-buttons"><button [disabled]="currentPage() === 1" (click)="changePage(currentPage() - 1)">‹</button>@for (page of pageNumbers(); track page) {<button [class.page-current]="page === currentPage()" (click)="changePage(page)">{{ page }}</button>}<button [disabled]="currentPage() === totalPages()" (click)="changePage(currentPage() + 1)">›</button></div></div></section>
+        </section>
+      } @else if (view() === 'payments') {
+        <section class="page-content payments-page">
+          <div class="page-heading"><div><p class="eyebrow">FINANCE</p><h1>Payments</h1><p class="muted">Send secure payments to your employees with Razorpay.</p></div><div class="payment-badge">● Razorpay enabled</div></div>
+          <div class="payments-grid">
+            <app-payment-form [employees]="employees()" [loading]="employeeServiceLoading()" [processing]="paymentProcessing()" (submit)="makePayment($event)"></app-payment-form>
+            <section class="payment-info panel"><div class="info-icon">₹</div><h2>Simple, secure payments</h2><p class="muted">Create an order in your workspace, then complete it securely in Razorpay Checkout.</p><div class="info-step"><b>01</b><span><strong>Enter payment details</strong><small>Choose an employee and add the amount.</small></span></div><div class="info-step"><b>02</b><span><strong>Pay with your preferred method</strong><small>Cards, UPI, net banking and wallets are supported.</small></span></div><div class="info-step"><b>03</b><span><strong>Track every transaction</strong><small>Verified payments appear in your history.</small></span></div></section>
+          </div>
+          @if (paymentError()) { <p class="api-error">{{ paymentError() }}</p> }
+          <app-transaction-list [transactions]="transactions()"></app-transaction-list>
+        </section>
+      } @else {
+        <section class="page-content placeholder-page"><div class="page-heading"><div><p class="eyebrow">WORKSPACE</p><h1>{{ view() | titlecase }}</h1><p class="muted">This section is ready for your team's next workflow.</p></div></div><section class="panel empty-panel"><div class="empty-illustration">◫</div><h2>Coming soon</h2><p class="muted">We're putting the finishing touches on this area.</p></section></section>
+      }
+    </main>
+  </div>
+}
+
+@if (notice()) { <div class="toast"><span>✓</span>{{ notice() }}</div> }
+@if (showEmployeeModal()) { <div class="modal-backdrop" (click)="closeModal()"><section class="modal" (click)="$event.stopPropagation()"><div class="modal-header"><div><p class="eyebrow">{{ editingEmployee() ? 'EDIT PROFILE' : 'NEW TEAM MEMBER' }}</p><h2>{{ editingEmployee() ? 'Edit employee' : 'Add employee' }}</h2></div><button class="close-button" (click)="closeModal()">×</button></div><form class="employee-form" (ngSubmit)="saveEmployee()"><div class="form-grid"><label>Full name *<input [(ngModel)]="employeeForm.name" name="name" required placeholder="e.g. Alex Morgan"></label><label>Department *<select [(ngModel)]="employeeForm.department" name="department">@for (item of departments().slice(1); track item) {<option [value]="item">{{ item }}</option>}</select></label><label>Role *<input [(ngModel)]="employeeForm.role" name="role" required placeholder="e.g. Product Manager"></label><label>Joining date<input type="date" [(ngModel)]="employeeForm.joiningDate" name="joiningDate"></label><label>Email address *<input type="email" [(ngModel)]="employeeForm.email" name="email" required placeholder="alex@company.com"></label><label>Phone number<input [(ngModel)]="employeeForm.phone" name="phone" placeholder="+1 (555) 000-0000"></label></div><div class="modal-actions"><button type="button" class="button button-secondary" (click)="closeModal()">Cancel</button><button type="submit" class="button button-primary">{{ editingEmployee() ? 'Save changes' : 'Add employee' }}</button></div></form></section></div> }
+@if (showDeleteModal()) { <div class="modal-backdrop" (click)="closeModal()"><section class="modal delete-modal" (click)="$event.stopPropagation()"><div class="delete-icon">!</div><h2>Delete employee?</h2><p class="muted">Are you sure you want to remove <b>{{ selectedEmployee()?.name }}</b>? This action cannot be undone.</p><div class="modal-actions"><button class="button button-secondary" (click)="closeModal()">Cancel</button><button class="button button-danger" (click)="confirmDelete()">Delete employee</button></div></section></div> }

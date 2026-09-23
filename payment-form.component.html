@@ -1,0 +1,67 @@
+<section class="payment-card">
+  <div class="payment-card-header">
+    <div class="payment-title-group">
+      <div class="payment-icon" aria-hidden="true">₹</div>
+      <div>
+        <p class="payment-kicker">PAYROLL &amp; EXPENSES</p>
+        <h2>New payment</h2>
+        <p class="payment-subtitle">Send a secure payment to a team member.</p>
+      </div>
+    </div>
+    <span class="secure-pill"><span aria-hidden="true">✓</span> Secure</span>
+  </div>
+
+  <div class="payment-divider"></div>
+
+  <form [formGroup]="form" (ngSubmit)="submitForm()" novalidate>
+    <div class="payment-field-row">
+      <label class="payment-field">
+        <span class="field-label">Amount <em>*</em></span>
+        <span class="amount-control">
+          <span class="currency-symbol" aria-hidden="true">₹</span>
+          <input type="number" formControlName="amount" min="1" step="0.01" placeholder="0.00" inputmode="decimal" aria-label="Payment amount">
+        </span>
+        @if (form.controls.amount.touched && form.controls.amount.invalid) {
+          <small class="field-error">Enter an amount greater than zero.</small>
+        }
+      </label>
+
+      <label class="payment-field">
+        <span class="field-label">Employee <em>*</em></span>
+        <span class="select-control">
+          <select formControlName="employeeId" [disabled]="loading || employees.length === 0">
+            <option value="" disabled>{{ loading ? 'Loading employees...' : 'Select employee' }}</option>
+            @for (employee of employees; track employee.id) {
+              <option [value]="employee.id">{{ employee.name }} · {{ employee.id }}</option>
+            }
+          </select>
+        </span>
+        @if (!loading && employees.length === 0) {
+          <small class="field-error">No employees are available.</small>
+        } @else if (form.controls.employeeId.touched && form.controls.employeeId.invalid) {
+          <small class="field-error">Select an employee.</small>
+        }
+      </label>
+    </div>
+
+    <label class="payment-field description-field">
+      <span class="field-label">Payment description <em>*</em></span>
+      <input formControlName="description" maxlength="120" placeholder="e.g. October salary advance">
+      <span class="field-hint">This will appear on the transaction record.</span>
+      @if (form.controls.description.touched && form.controls.description.invalid) {
+        <small class="field-error">Add a description for this payment.</small>
+      }
+    </label>
+
+    <div class="payment-summary">
+      <div><span class="summary-label">Total to pay</span><span class="summary-note">Inclusive of all details</span></div>
+      <strong>{{ (form.controls.amount.value || 0) | currency:'INR':'symbol':'1.2-2' }}</strong>
+    </div>
+
+    <button class="payment-submit" type="submit" [disabled]="form.invalid || processing">
+      <span>{{ processing ? 'Preparing secure checkout...' : 'Continue to payment' }}</span>
+      <span class="submit-arrow" aria-hidden="true">→</span>
+    </button>
+    <p class="secure-note"><span aria-hidden="true">▣</span> Payments are securely processed by <strong>Razorpay</strong></p>
+  </form>
+</section>
